@@ -1,0 +1,13 @@
+# binaries
+*.out
+*.o
+*.so
+*.dylib
+*.dll
+
+# build directories
+/build/
+/dist/
+
+compile_commands.json
+.cache/
