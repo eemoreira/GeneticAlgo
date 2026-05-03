@@ -52,13 +52,22 @@ SatProblem read_sat_problem(const std::string& filename) {
 
 signed main(const int argc, const char* argv[]) {
 
-    if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " <generations> <population_size>" << std::endl;
+    if (argc < 6) {
+        std::cerr << "Usage: " << argv[0] << " <generations> <population_size> <mutation_rate> <crossover_rate> <elitism_selection>" << std::endl;
         return 1;
     }
 
-    int32_t generations = atoi(argv[1]);
-    int32_t populationSize = atoi(argv[2]);
+    int32_t generations = std::stoi(argv[1]);
+    int32_t populationSize = std::stoi(argv[2]);
+    double mutationRate = std::stod(argv[3]);
+    double crossoverRate = std::stod(argv[4]);
+    if (argv[5] != std::string("true") && argv[5] != std::string("false")) {
+        std::cerr << "Elitism selection must be 'true' or 'false'" << std::endl;
+        return 1;
+    }
+    bool elitismSelection = argv[5] == std::string("true");
+    
+    std::cout << "parameters: " << generations << " " << populationSize << " " << mutationRate << " " << crossoverRate << std::endl;
 
     using GeneType = uint8_t; // Binary representation (not using bool because std::bool sucks)
 
@@ -75,31 +84,32 @@ signed main(const int argc, const char* argv[]) {
         return std::uniform_int_distribution<GeneType>(0, 1)(rng);
     };
 
-    OnePointCrossover crossoverFunction;
+    OnePointCrossover crossoverFunction(crossoverRate);
 
-    BitFlipMutation mutationFunction(0.01); // 1% mutation rate
+    BitFlipMutation mutationFunction(mutationRate);
 
     GeneticAlgorithm<GeneType, decltype(fitnessFunction), decltype(generatorFunction), decltype(crossoverFunction), decltype(mutationFunction)> ga(
         populationSize,
         fitnessFunction,
         crossoverFunction,
-        mutationFunction
+        mutationFunction,
+        generatorFunction,
+        elitismSelection
     );
 
     ga.dimension = satProblem.num_variables;
     ga.initPopulation();
 
-    // Evaluate initial fitness
+    int generation = 0;
+    do {
     ga.evaluateFitness();
-
-    for (int generation = 0; generation < generations; ++generation) {
         ga.evolve();
         ga.evaluateFitness();
         std::cout << "Generation " << generation << " best fitness: " 
                   << std::max_element(ga.population.begin(), ga.population.end(), [](const auto& a, const auto& b) {
                       return a.fitness < b.fitness;
                   })->fitness << std::endl;
-    }
+    } while (generation++ < generations);
 
     return 0;
 }

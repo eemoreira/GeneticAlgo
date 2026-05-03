@@ -5,11 +5,15 @@
 #include "rand.hpp"
 
 struct OnePointCrossover {
+    double crossoverRate;
     template<typename Individual>
         std::pair<Individual, Individual> operator()(
             const Individual& parent1,
             const Individual& parent2
         ) {
+            if (std::uniform_real_distribution(0.0, 1.0)(rng) > crossoverRate) {
+                return {parent1, parent2};
+            }
             size_t size = parent1.genes.size();
             size_t crossoverPoint = rng() % size;
 
@@ -28,6 +32,7 @@ struct OnePointCrossover {
 
             return {child1, child2};
         }
+    OnePointCrossover(double rate) : crossoverRate(rate) {}
     OnePointCrossover(const OnePointCrossover &) = default;
     OnePointCrossover(OnePointCrossover &&) = default;
     OnePointCrossover &operator=(const OnePointCrossover &) = default;
@@ -36,11 +41,15 @@ struct OnePointCrossover {
 };
 
 struct TwoPointCrossover {
+    double crossoverRate;
     template<typename Individual>
         std::pair<Individual, Individual> operator()(
             const Individual& parent1,
             const Individual& parent2
         ) {
+            if (std::uniform_real_distribution(0.0, 1.0)(rng) > crossoverRate) {
+                return {parent1, parent2};
+            }
             size_t size = parent1.genes.size();
             size_t point1 = rng() % size;
             size_t point2 = rng() % size;
@@ -66,6 +75,7 @@ struct TwoPointCrossover {
 
             return {child1, child2};
         }
+    TwoPointCrossover(double rate) : crossoverRate(rate) {}
     TwoPointCrossover(const TwoPointCrossover &) = default;
     TwoPointCrossover(TwoPointCrossover &&) = default;
     TwoPointCrossover &operator=(const TwoPointCrossover &) = default;
@@ -74,11 +84,15 @@ struct TwoPointCrossover {
 };
 
 struct PMXCrossover {
+    double crossoverRate;
     template<typename Individual>
         std::pair<Individual, Individual> operator()(
             const Individual& parent1,
             const Individual& parent2
         ) {
+            if (std::uniform_real_distribution(0.0, 1.0)(rng) > crossoverRate) {
+                return {parent1, parent2};
+            }
             size_t size = parent1.genes.size();
             size_t point1 = rng() % size;
             size_t point2 = rng() % size;
@@ -104,6 +118,7 @@ struct PMXCrossover {
 
             return {child1, child2};
         }
+    PMXCrossover(double rate) : crossoverRate(rate) {}
     PMXCrossover(const PMXCrossover &) = default;
     PMXCrossover(PMXCrossover &&) = default;
     PMXCrossover &operator=(const PMXCrossover &) = default;
@@ -112,11 +127,15 @@ struct PMXCrossover {
 };
 
 struct CXCrossover {
+    double crossoverRate;
     template<typename Individual>
         std::pair<Individual, Individual> operator()(
             const Individual& parent1,
             const Individual& parent2
         ) {
+            if (std::uniform_real_distribution(0.0, 1.0)(rng) > crossoverRate) {
+                return {parent1, parent2};
+            }
             size_t size = parent1.genes.size();
             Individual child1, child2;
             child1.genes.resize(size);
@@ -137,6 +156,7 @@ struct CXCrossover {
 
             return {child1, child2};
         }
+    CXCrossover(double rate) : crossoverRate(rate) {}
     CXCrossover(const CXCrossover &) = default;
     CXCrossover(CXCrossover &&) = default;
     CXCrossover &operator=(const CXCrossover &) = default;

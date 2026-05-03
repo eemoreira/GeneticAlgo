@@ -22,16 +22,21 @@ struct GeneticAlgorithm {
     CrossoverFunction crossoverFunction;
     MutationFunction mutationFunction;
     GeneratorFunction generatorFunction;
+    bool elitismSelection;
 
     GeneticAlgorithm(
         const uint32_t& populationSize,
         FitnessFunction fitnessFunc,
         CrossoverFunction crossoverFunc,
-        MutationFunction mutationFunc
+        MutationFunction mutationFunc,
+        GeneratorFunction generatorFunc,
+        bool elitism
     ) : population(populationSize),
         fitnessFunction(fitnessFunc),
         crossoverFunction(crossoverFunc),
-        mutationFunction(mutationFunc) {}
+        mutationFunction(mutationFunc),
+        generatorFunction(generatorFunc),
+        elitismSelection(elitism) {}
 
     void initPopulation() {
         for (auto& ind : population) {
@@ -80,6 +85,13 @@ struct GeneticAlgorithm {
     void evolve() {
         std::vector<IndividualType> newPopulation;
         newPopulation.reserve(population.size());
+
+        if (elitismSelection) {
+            IndividualType bestIndividual = *std::max_element(population.begin(), population.end(), [](const auto& a, const auto& b) {
+                return a.fitness < b.fitness;
+            });
+            newPopulation.push_back(bestIndividual);
+        }
 
         std::cout << "Evolving population of size " << population.size() << std::endl;
 
