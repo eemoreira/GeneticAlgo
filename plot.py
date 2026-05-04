@@ -46,14 +46,11 @@ def plot(files, output):
         x = df["Generation"].values
         y = df["BestFitness"].values
 
-        label = f"POP={meta['POP']} PC={meta['PC']} PM={meta['PM']}"
+        label = f"POP={meta['POP']} PC={meta['PC']} PM={meta['PM']}, ELIT={meta['ELIT']}"
 
         plt.scatter(x, y, s=10)
 
-        x_smooth = np.linspace(x.min(), x.max(), 300)
-        y_smooth = np.interp(x_smooth, x, y)
-
-        plt.plot(x_smooth, y_smooth, label=label)
+        plt.plot(x, y, label=label)
 
     plt.xlabel("Generation")
     plt.ylabel("Best Fitness")
