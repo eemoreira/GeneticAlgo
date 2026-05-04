@@ -22,7 +22,7 @@ struct GeneticAlgorithm {
     CrossoverFunction crossoverFunction;
     MutationFunction mutationFunction;
     GeneratorFunction generatorFunction;
-    bool elitismSelection;
+    uint32_t elitismCharge;
 
     GeneticAlgorithm(
         const uint32_t& populationSize,
@@ -30,13 +30,13 @@ struct GeneticAlgorithm {
         CrossoverFunction crossoverFunc,
         MutationFunction mutationFunc,
         GeneratorFunction generatorFunc,
-        bool elitism
+        uint32_t elitism
     ) : population(populationSize),
         fitnessFunction(fitnessFunc),
         crossoverFunction(crossoverFunc),
         mutationFunction(mutationFunc),
         generatorFunction(generatorFunc),
-        elitismSelection(elitism) {}
+        elitismCharge(elitism) {}
 
     void initPopulation() {
         for (auto& ind : population) {
@@ -91,11 +91,11 @@ struct GeneticAlgorithm {
         std::vector<IndividualType> newPopulation;
         newPopulation.reserve(population.size());
 
-        if (elitismSelection) {
-            IndividualType bestIndividual = *std::max_element(population.begin(), population.end(), [](const auto& a, const auto& b) {
-                return a.fitness < b.fitness;
-            });
-            newPopulation.push_back(bestIndividual);
+        std::nth_element(population.begin(), population.begin() + elitismCharge, population.end(), [](const auto& a, const auto& b) {
+                return a.fitness > b.fitness;
+        });
+        for (uint32_t i = 0; i < elitismCharge; i++) {
+            newPopulation.emplace_back(population[i]);
         }
 
         std::cout << "Evolving population of size " << population.size() << std::endl;
@@ -105,7 +105,6 @@ struct GeneticAlgorithm {
             size_t p2 = selectParent();
 
             while (p2 == p1) {
-                //std::cout << "Warning: Selected the same parent twice, reselecting..." << std::endl;
                 p2 = selectParent();
             }
 

@@ -13,6 +13,10 @@ add_executable(sat
     problems/sat/main.cpp
 )
 
+add_executable(cos_function
+    problems/cos-function/main.cpp
+)
+
 target_compile_options(sat PRIVATE
     -Wall
     -O2

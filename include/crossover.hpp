@@ -4,6 +4,41 @@
 #include <algorithm>
 #include "rand.hpp"
 
+struct UniformCrossover {
+    double crossoverRate;
+    template<typename Individual>
+        std::pair<Individual, Individual> operator()(
+            const Individual& parent1,
+            const Individual& parent2
+        ) {
+            if (std::uniform_real_distribution(0.0, 1.0)(rng) > crossoverRate) {
+                return {parent1, parent2};
+            }
+            size_t size = parent1.genes.size();
+            Individual child1, child2;
+            child1.genes.resize(size);
+            child2.genes.resize(size);
+
+            for (size_t i = 0; i < size; ++i) {
+                if (std::uniform_real_distribution(0.0, 1.0)(rng) < 0.5) {
+                    child1.genes[i] = parent1.genes[i];
+                    child2.genes[i] = parent2.genes[i];
+                } else {
+                    child1.genes[i] = parent2.genes[i];
+                    child2.genes[i] = parent1.genes[i];
+                }
+            }
+
+            return {child1, child2};
+        }
+    UniformCrossover(double rate) : crossoverRate(rate) {}
+    UniformCrossover(const UniformCrossover &) = default;
+    UniformCrossover(UniformCrossover &&) = default;
+    UniformCrossover &operator=(const UniformCrossover &) = default;
+    UniformCrossover &operator=(UniformCrossover &&) = default;
+    UniformCrossover() = default;
+};
+
 struct OnePointCrossover {
     double crossoverRate;
     template<typename Individual>
