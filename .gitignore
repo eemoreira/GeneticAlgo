@@ -5,9 +5,16 @@
 *.dylib
 *.dll
 
+*.png
+*.txt
+*.cnf
+
 # build directories
 /build/
 /dist/
 
 compile_commands.json
 .cache/
+
+.venv/
+.python-version

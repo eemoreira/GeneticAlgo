@@ -86,7 +86,8 @@ signed main(const int argc, const char* argv[]) {
 
     OnePointCrossover crossoverFunction(crossoverRate);
 
-    BitFlipMutation mutationFunction(mutationRate);
+    //BitFlipMutation mutationFunction(mutationRate);
+    SwapMutation mutationFunction(mutationRate);
 
     GeneticAlgorithm<GeneType, decltype(fitnessFunction), decltype(generatorFunction), decltype(crossoverFunction), decltype(mutationFunction)> ga(
         populationSize,
@@ -101,15 +102,30 @@ signed main(const int argc, const char* argv[]) {
     ga.initPopulation();
 
     int generation = 0;
-    do {
+    // write the best fitness of each generation to a file
+    std::ofstream outfile("output.txt");
+    if (!outfile.is_open()) {
+        std::cerr << "Could not open output file" << std::endl;
+        return 1;
+    }
+
+    outfile << "Generations: " << generations << std::endl;
+    outfile << "Population Size: " << populationSize << std::endl;
+    outfile << "Mutation Rate: " << mutationRate << std::endl;
+    outfile << "Crossover Rate: " << crossoverRate << std::endl;
+    outfile << "Elitism Selection: " << (elitismSelection ? "true" : "false") << std::endl;
+
+    outfile << "Generation,BestFitness" << std::endl;
     ga.evaluateFitness();
-        ga.evolve();
-        ga.evaluateFitness();
-        std::cout << "Generation " << generation << " best fitness: " 
-                  << std::max_element(ga.population.begin(), ga.population.end(), [](const auto& a, const auto& b) {
-                      return a.fitness < b.fitness;
-                  })->fitness << std::endl;
-    } while (generation++ < generations);
+    while (generation < generations) {
+        ga.runSingleGeneration();
+        double bestFitness = max_element(ga.population.begin(), ga.population.end(), [](const auto& ind1, const auto& ind2) {
+            return ind1.fitness < ind2.fitness;
+        })->fitness;
+        std::cout << "Generation " << generation << ": Best Fitness = " << bestFitness << std::endl;
+        outfile << generation << ','  << bestFitness << std::endl;
+        generation++;
+    }
 
     return 0;
 }

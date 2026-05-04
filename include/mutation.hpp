@@ -31,6 +31,7 @@ struct SwapMutation {
                 std::swap(individual.genes[i], individual.genes[j]);
             }
         }
+    SwapMutation(double rate) : mutationRate(rate) {}
     SwapMutation(const SwapMutation &) = default;
     SwapMutation(SwapMutation &&) = default;
     SwapMutation &operator=(const SwapMutation &) = default;

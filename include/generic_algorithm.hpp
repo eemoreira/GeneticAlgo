@@ -64,6 +64,11 @@ struct GeneticAlgorithm {
         }
     }
 
+    void runSingleGeneration() {
+        evolve();
+        evaluateFitness();
+    }
+
     size_t selectParent() {
         double totalFitness = 0.0;
         for (const auto& ind : population) {
