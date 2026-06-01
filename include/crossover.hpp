@@ -11,7 +11,7 @@ struct UniformCrossover {
             const Individual& parent1,
             const Individual& parent2
         ) {
-            if (std::uniform_real_distribution(0.0, 1.0)(rng) > crossoverRate) {
+            if (std::uniform_real_distribution<double>(0.0, 1.0)(rng) > crossoverRate) {
                 return {parent1, parent2};
             }
             size_t size = parent1.genes.size();
@@ -46,7 +46,7 @@ struct OnePointCrossover {
             const Individual& parent1,
             const Individual& parent2
         ) {
-            if (std::uniform_real_distribution(0.0, 1.0)(rng) > crossoverRate) {
+            if (std::uniform_real_distribution<double>(0.0, 1.0)(rng) > crossoverRate) {
                 return {parent1, parent2};
             }
             size_t size = parent1.genes.size();
@@ -82,7 +82,7 @@ struct TwoPointCrossover {
             const Individual& parent1,
             const Individual& parent2
         ) {
-            if (std::uniform_real_distribution(0.0, 1.0)(rng) > crossoverRate) {
+            if (std::uniform_real_distribution<double>(0.0, 1.0)(rng) > crossoverRate) {
                 return {parent1, parent2};
             }
             size_t size = parent1.genes.size();
@@ -125,34 +125,68 @@ struct PMXCrossover {
             const Individual& parent1,
             const Individual& parent2
         ) {
-            if (std::uniform_real_distribution(0.0, 1.0)(rng) > crossoverRate) {
+            if (std::uniform_real_distribution<double>(0.0, 1.0)(rng) > crossoverRate) {
                 return {parent1, parent2};
             }
+
             size_t size = parent1.genes.size();
             size_t point1 = rng() % size;
             size_t point2 = rng() % size;
 
-            if (point1 > point2) std::swap(point1, point2);
+            if (point1 > point2) {
+                std::swap(point1, point2);
+            }
 
             Individual child1, child2;
-            child1.genes.resize(size);
-            child2.genes.resize(size);
 
-            for (size_t i = 0; i < point1; ++i) {
-                child1.genes[i] = parent1.genes[i];
-                child2.genes[i] = parent2.genes[i];
-            }
-            for (size_t i = point1; i < point2; ++i) {
+            child1.genes.resize(size, -1);
+            child2.genes.resize(size, -1);
+
+            // Copy crossover segment
+            for (size_t i = point1; i <= point2; ++i) {
                 child1.genes[i] = parent2.genes[i];
                 child2.genes[i] = parent1.genes[i];
             }
-            for (size_t i = point2; i < size; ++i) {
-                child1.genes[i] = parent1.genes[i];
-                child2.genes[i] = parent2.genes[i];
-            }
+
+            auto pmx_fill = [&](auto& child,
+                    const auto& parentA,
+                    const auto& parentB) {
+
+                for (size_t i = 0; i < size; ++i) {
+
+                    if (i >= point1 && i <= point2)
+                        continue;
+
+                    auto gene = parentA.genes[i];
+
+                    while (std::find(
+                            child.genes.begin() + point1,
+                            child.genes.begin() + point2 + 1,
+                            gene
+                    ) != child.genes.begin() + point2 + 1) {
+
+                        auto it = std::find(
+                                parentB.genes.begin() + point1,
+                                parentB.genes.begin() + point2 + 1,
+                                gene
+                                );
+
+                        size_t idx = std::distance(parentB.genes.begin(), it);
+
+                        gene = parentA.genes[idx];
+                    }
+
+                    child.genes[i] = gene;
+                }
+            };
+
+            pmx_fill(child1, parent1, parent2);
+            pmx_fill(child2, parent2, parent1);
 
             return {child1, child2};
         }
+
+
     PMXCrossover(double rate) : crossoverRate(rate) {}
     PMXCrossover(const PMXCrossover &) = default;
     PMXCrossover(PMXCrossover &&) = default;

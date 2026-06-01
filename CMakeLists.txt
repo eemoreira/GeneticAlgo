@@ -21,6 +21,10 @@ add_executable(radios
     problems/radios/main.cpp
 )
 
+add_executable(queens
+    problems/queens/main.cpp
+)
+
 target_compile_options(sat PRIVATE
     -Wall
     -O2

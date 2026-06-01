@@ -98,19 +98,19 @@ signed main(const int argc, const char* argv[]) {
 
     ga.dimension = satProblem.num_variables;
 
-    std::ofstream outfile("output.txt");
+    std::ofstream outfile("results.txt", std::ios::app);
     if (!outfile.is_open()) {
         std::cerr << "Could not open output file" << std::endl;
         return 1;
     }
 
-    outfile << "Generations: " << generations << std::endl;
-    outfile << "Population Size: " << populationSize << std::endl;
-    outfile << "Mutation Rate: " << mutationRate << std::endl;
-    outfile << "Crossover Rate: " << crossoverRate << std::endl;
-    outfile << "Elitism Selection: " << elitismCharge << std::endl;
+   // outfile << "Generations: " << generations << std::endl;
+   // outfile << "Population Size: " << populationSize << std::endl;
+   // outfile << "Mutation Rate: " << mutationRate << std::endl;
+   // outfile << "Crossover Rate: " << crossoverRate << std::endl;
+   // outfile << "Elitism Selection: " << elitismCharge << std::endl;
 
-    outfile << "Generation,BestFitness" << std::endl;
+   // outfile << "Generation,BestFitness" << std::endl;
 
     int generation = 0;
     ga.initPopulation();
@@ -121,9 +121,13 @@ signed main(const int argc, const char* argv[]) {
             return ind1.fitness < ind2.fitness;
         })->fitness;
         std::cout << "Generation " << generation << ": Best Fitness = " << bestFitness << std::endl;
-        outfile << generation << ','  << bestFitness << std::endl;
+        //outfile << generation << ','  << bestFitness << std::endl;
         generation++;
     }
+
+    outfile << max_element(ga.population.begin(), ga.population.end(), [](const auto& ind1, const auto& ind2) {
+        return ind1.fitness < ind2.fitness;
+    })->fitness << std::endl;
 
     return 0;
 }

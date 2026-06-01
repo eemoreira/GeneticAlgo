@@ -63,19 +63,19 @@ signed main(const int argc, const char* argv[]) {
 
     int generation = 0;
     // write the best fitness of each generation to a file
-    std::ofstream outfile("output.txt");
+    std::ofstream outfile("results.txt", std::ios::app);
     if (!outfile.is_open()) {
         std::cerr << "Could not open output file" << std::endl;
         return 1;
     }
 
-    outfile << "Generations: " << generations << std::endl;
-    outfile << "Population Size: " << populationSize << std::endl;
-    outfile << "Mutation Rate: " << mutationRate << std::endl;
-    outfile << "Crossover Rate: " << crossoverRate << std::endl;
-    outfile << "Elitism Selection: " << (elitismSelection ? "true" : "false") << std::endl;
+   // outfile << "Generations: " << generations << std::endl;
+   // outfile << "Population Size: " << populationSize << std::endl;
+   // outfile << "Mutation Rate: " << mutationRate << std::endl;
+   // outfile << "Crossover Rate: " << crossoverRate << std::endl;
+   // outfile << "Elitism Selection: " << (elitismSelection ? "true" : "false") << std::endl;
 
-    outfile << "Generation,BestFitness" << std::endl;
+   // outfile << "Generation,BestFitness" << std::endl;
     ga.evaluateFitness();
     double maxFitness = 0.0;
     while (generation < generations) {
@@ -84,11 +84,12 @@ signed main(const int argc, const char* argv[]) {
             return ind1.fitness < ind2.fitness;
         })->fitness;
         maxFitness = std::max(maxFitness, bestFitness);
-        std::cout << "Generation " << generation << ": Best Fitness = " << bestFitness << std::endl;
-        outfile << generation << ','  << bestFitness << std::endl;
+       // std::cout << "Generation " << generation << ": Best Fitness = " << bestFitness << std::endl;
+       // outfile << generation << ','  << bestFitness << std::endl;
         generation++;
     }
     std::cout << "Max Fitness: " << maxFitness << std::endl;
+    outfile << maxFitness << std::endl;
 
     return 0;
 }

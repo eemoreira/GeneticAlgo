@@ -45,6 +45,17 @@ struct GeneticAlgorithm {
         }
     }
 
+    void initPermutationPopulation() {
+        for (auto& ind : population) {
+            ind.genes.resize(dimension);
+            randomizePermutation(ind);
+        }
+    }
+
+    void randomizePermutation(IndividualType& individual) {
+        individual.genes = generatorFunction();
+    }
+
     void randomize(IndividualType& individual) {
         for (auto& g : individual.genes) {
             g = generatorFunction();
