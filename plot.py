@@ -44,16 +44,41 @@ def plot(files, output):
         df, meta = read_ga_file(file)
 
         x = df["Generation"].values
-        y = df["BestFitness"].values
+        best = df["BestFitness"].values
+        avg = df["AverageFitness"].values
 
-        label = f"POP={meta['POP']} PC={meta['PC']} PM={meta['PM']}, ELIT={meta['ELIT']}"
+        label = (
+            f"POP={meta['POP']} "
+            f"PC={meta['PC']} "
+            f"PM={meta['PM']} "
+            f"ELIT={meta['ELIT']}"
+        )
 
-        plt.scatter(x, y, s=10)
+        line, = plt.plot(
+            x,
+            best,
+            label=f"{label} (Best)"
+        )
+        color = line.get_color()
 
-        plt.plot(x, y, label=label)
+        plt.scatter(x, best, s=10, color=color)
+
+        plt.plot(
+            x,
+            avg,
+            color="red",
+            label=f"{label} (Average)"
+        )
+
+        plt.scatter(
+            x,
+            avg,
+            s=10,
+            color="red"
+        )
 
     plt.xlabel("Generation")
-    plt.ylabel("Best Fitness")
+    plt.ylabel("Fitness")
     plt.title("GA Convergence Comparison")
 
     plt.legend()
@@ -61,7 +86,6 @@ def plot(files, output):
 
     plt.savefig(output)
     plt.show()
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot GA convergence")

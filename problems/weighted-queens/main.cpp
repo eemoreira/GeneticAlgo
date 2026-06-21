@@ -5,13 +5,13 @@
 #include "crossover.hpp"
 #include "mutation.hpp"
 #include "rand.hpp"
-#include "queens.hpp"
+#include "weighted-queens.hpp"
 #include <fstream>
 
 signed main(const int argc, const char* argv[]) {
 
-    if (argc < 7) {
-        std::cerr << "Usage: " << argv[0] << " <number of queens> <generations> <population_size> <mutation_rate> <crossover_rate> <elitism_selection>" << std::endl;
+    if (argc < 8) {
+        std::cerr << "Usage: " << argv[0] << " <number of queens> <generations> <population_size> <mutation_rate> <crossover_rate> <elitism_selection> <penalty>" << std::endl;
         return 1;
     }
 
@@ -21,15 +21,24 @@ signed main(const int argc, const char* argv[]) {
     double mutationRate = std::stod(argv[4]);
     double crossoverRate = std::stod(argv[5]);
     uint32_t elitismCharge = std::stoi(argv[6]);
+    double penalty = std::stod(argv[7]);
     
     std::cout << "parameters: " << generations << " " << populationSize << " " << mutationRate << " " << crossoverRate << std::endl;
 
     using GeneType = uint32_t; // permutation
 
-    NQueensFitnessFunction nQueensFitnessFunction;
+    std::vector<std::vector<double>> a(N, std::vector<double>(N));
+    for (size_t i = 0; i < N; i++) {
+        for (size_t j = 0; j < N; j++) {
+            if (~i & 1) a[i][j] = sqrt(i * N + j);
+            else a[i][j] = log10(i * N + j);
+        }
+    }
+
+    WeightedQueensFitnessFunction weightedQueensFitnessFunction(penalty, a);
 
     auto fitnessFunction = [&](const std::vector<GeneType>& genes) {
-        return (double)nQueensFitnessFunction(genes);
+        return weightedQueensFitnessFunction(genes);
     };
 
     auto generatorFunction = [&]() {
@@ -94,27 +103,25 @@ signed main(const int argc, const char* argv[]) {
     }
 
     std::cout << "Best Fitness: " << bestFitness << std::endl;
-    std::cout << "Target Fitness: " << target << std::endl;
+    std::cout << "Average Fitness: " << std::accumulate(ga.population.begin(), ga.population.end(), 0.0, [](double sum, const auto& ind) {
+        return sum + ind.fitness;
+    }) / ga.population.size() << std::endl;
 
-    if ((uint32_t)bestFitness == target) {
-        std::cout << "Solution found!" << std::endl;
-
-        for (size_t i = 0; i < N; i++) {
-            for (size_t j = 0; j < N; j++) {
-                if (j == (size_t)ga.population[0].genes[i]) {
-                    std::cout << "Q ";
-                } else {
-                    std::cout << ". ";
-                }
+    int bestIndex = std::distance(ga.population.begin(), max_element(ga.population.begin(), ga.population.end(), [](const auto& ind1, const auto& ind2) {
+        return ind1.fitness < ind2.fitness;
+    }));
+    const auto& bestIndividual = ga.population[bestIndex];
+    const auto& genes = bestIndividual.genes;
+    uint32_t badPairs = 0;
+    std::cout << "Best Individual: ";
+    for (size_t i = 0; i < N; i++) {
+        for (size_t j = i + 1; j < N; j++) {
+            if (abs((int)genes[i] - (int)genes[j]) == abs((int)i - (int)j)) {
+                badPairs += 1;
             }
-            std::cout << std::endl;
         }
-        std::cout << std::endl;
-
-    } else {
-        std::cout << "No solution found." << std::endl;
     }
-
+    std::cout << "Number of bad pairs: " << badPairs << std::endl;
 
     outfile << max_element(ga.population.begin(), ga.population.end(), [](const auto& ind1, const auto& ind2) {
         return ind1.fitness < ind2.fitness;
@@ -122,5 +129,6 @@ signed main(const int argc, const char* argv[]) {
 
     return 0;
 }
+
 
 
