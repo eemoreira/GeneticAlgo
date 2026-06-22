@@ -232,3 +232,41 @@ struct CXCrossover {
     CXCrossover &operator=(CXCrossover &&) = default;
     CXCrossover() = default;
 };
+
+struct SBXCrossover {
+    double crossoverRate;
+    double n_c; // distribution index
+    template<typename Individual>
+        std::pair<Individual, Individual> operator()(
+            const Individual& parent1,
+            const Individual& parent2
+        ) {
+            if (std::uniform_real_distribution<double>(0.0, 1.0)(rng) > crossoverRate) {
+                return {parent1, parent2};
+            }
+            size_t genes_size = parent1.genes.size();
+            size_t fitness_size = parent1.fitness.size();
+            Individual child1, child2;
+            child1.genes.resize(genes_size);
+            child2.genes.resize(genes_size);
+            child1.fitness.resize(fitness_size);
+            child2.fitness.resize(fitness_size);
+
+            for (size_t i = 0; i < genes_size; ++i) {
+                double u = std::uniform_real_distribution<>(0.0, 1.0)(rng);
+                double beta = u < 0.5 ? std::pow(2 * u, 1.0 / (n_c + 1)) : std::pow(2 * (1 - u), -1.0 / (n_c + 1));
+                child1.genes[i] = 0.5 * ((1 + beta) * parent1.genes[i] + (1 - beta) * parent2.genes[i]);
+                child2.genes[i] = 0.5 * ((1 - beta) * parent1.genes[i] + (1 + beta) * parent2.genes[i]);
+                child1.genes[i] = std::min(1.0, std::max(0.0, child1.genes[i]));
+                child2.genes[i] = std::min(1.0, std::max(0.0, child2.genes[i]));
+            }
+
+            return {child1, child2};
+        }
+    SBXCrossover(double rate, double n_c) : crossoverRate(rate), n_c(n_c) {}
+    SBXCrossover(const SBXCrossover &) = default;
+    SBXCrossover(SBXCrossover &&) = default;
+    SBXCrossover &operator=(const SBXCrossover &) = default;
+    SBXCrossover &operator=(SBXCrossover &&) = default;
+    SBXCrossover() = default;
+};

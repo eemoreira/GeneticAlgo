@@ -29,6 +29,10 @@ add_executable(weighted_queens
     problems/weighted-queens/main.cpp
 )
 
+add_executable(delivery
+    problems/delivery/main.cpp
+)
+
 target_compile_options(sat PRIVATE
     -Wall
     -O2
