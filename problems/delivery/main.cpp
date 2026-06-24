@@ -134,8 +134,8 @@ signed main(int argc, const char* argv[]) {
         return std::uniform_real_distribution<>(0.0, 1.0)(rng);
     };
 
-    SBXCrossover crossoverFunction(crossoverRate, 20.0);
-    PolynomialMutation mutationFunction(mutationRate, 20.0);
+    SBXCrossover crossoverFunction(crossoverRate, 10.0);
+    PolynomialMutation mutationFunction(mutationRate, 10.0);
 
     NSGA2<
         GeneType,
@@ -156,31 +156,30 @@ signed main(int argc, const char* argv[]) {
     ga.dimension = 27; // 9 segmentos * 3 parâmetros cada
 
     ga.initPopulation();
-    std::vector<size_t> pareto;
     while (generations--) {
-        std::cout << "Generation = " << generations + 1 << "\r" << std::flush;
+        std::cout << "Generations left = " << generations + 1 << " \r" << std::flush;
         for (auto& ind : ga.population) {
             problem.calcWeights(ind.genes);
             ind.fitness[0] = F1(ind.genes);
             ind.fitness[1] = F2(ind.genes);
             ind.fitness[2] = F3(ind.genes);
         }
-        pareto = ga.evolve();
+        ga.evolve();
     }
 
     std::ofstream outfile("problems/delivery/output.csv");
     outfile << "f1,f2,f3\n";
 
-    for (auto i : pareto) {
-        auto& ind = ga.population[i];
+    auto pareto = ga.getFronts()[0];
+    std::cout << "Pareto front size: " << pareto.size() << std::endl;
+
+    for (auto& ind : pareto) {
         problem.calcWeights(ind.genes);
         ind.fitness[0] = F1(ind.genes);
         ind.fitness[1] = F2(ind.genes);
         ind.fitness[2] = F3(ind.genes);
         outfile << ind.fitness[0] << "," << ind.fitness[1] << "," << ind.fitness[2] << "\n";
     }
-
-
 
     return 0;
 }

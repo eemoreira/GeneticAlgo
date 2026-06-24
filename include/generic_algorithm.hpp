@@ -194,11 +194,11 @@ struct NSGA2 {
             assert(i < dominatesOnFunction.size());
             const auto& cmp = dominatesOnFunction[i];
 
-            if (cmp(a.fitness[i], b.fitness[i]) < 0) {
+            if (cmp(b.fitness[i], a.fitness[i])) {
                 return false;
             }
 
-            if (cmp(a.fitness[i], b.fitness[i]) > 0) {
+            if (cmp(a.fitness[i], b.fitness[i])) {
                 betterInAtLeastOne = true;
             }
         }
@@ -220,9 +220,9 @@ struct NSGA2 {
 
     std::vector<IndividualType> getNewPopulation() {
         std::vector<IndividualType> newPopulation;
-        newPopulation.reserve(population.size());
+        newPopulation.reserve(populationSize);
 
-        while (newPopulation.size() < population.size()) {
+        while (newPopulation.size() < populationSize) {
             size_t p1 = selectParent();
             size_t p2 = selectParent();
 
@@ -237,7 +237,7 @@ struct NSGA2 {
             mutationFunction(c1);
             newPopulation.push_back(std::move(c1));
 
-            if (newPopulation.size() < population.size()) {
+            if (newPopulation.size() < populationSize) {
                 mutationFunction(c2);
                 newPopulation.push_back(std::move(c2));
             }
@@ -262,20 +262,17 @@ struct NSGA2 {
 
             if (fMax - fMin == 0) continue;
 
-            for (size_t i = 1; i < front.size() - 1; ++i) {
+            for (size_t i = 1; i + 1 < front.size(); ++i) {
                 front[i].crowdingDistance += (front[i + 1].fitness[m] - front[i - 1].fitness[m]) / (fMax - fMin);
             }
         }
     }
 
-    std::vector<size_t> evolve() {
-        assignCrowdingDistances(population);
-        auto offspring = getNewPopulation();
-        population.insert(population.end(), offspring.begin(), offspring.end());
-
+    std::vector<std::vector<IndividualType>> getFronts() {
         std::vector<std::vector<size_t>> fronts;
         std::vector<std::vector<int>> dom(population.size());
         std::vector<int> domCnt(population.size(), 0);
+
         for (size_t i = 0; i < population.size(); i++) {
             for (size_t j = 0; j < population.size(); j++) {
                 if (i != j && dominates(population[i], population[j])) {
@@ -283,6 +280,9 @@ struct NSGA2 {
                     domCnt[j]++;
                 }
             }
+        }
+
+        for (size_t i = 0; i < population.size(); i++) {
             if (domCnt[i] == 0) {
                 if (fronts.empty()) {
                     fronts.emplace_back();
@@ -291,9 +291,18 @@ struct NSGA2 {
             }
         }
 
+        std::vector<std::vector<IndividualType>> resultFronts;
+        for (const auto& front : fronts) {
+            std::vector<IndividualType> frontIndividuals;
+            for (size_t idx : front) {
+                frontIndividuals.emplace_back(population[idx]);
+            }
+            resultFronts.emplace_back(std::move(frontIndividuals));
+        }
+
         while (true) {
             std::vector<size_t> nextFront;
-            for (size_t i : fronts.back()) {
+            for (const auto& i : fronts.back()) {
                 for (size_t j : dom[i]) {
                     if (--domCnt[j] == 0) {
                         nextFront.emplace_back(j);
@@ -303,34 +312,41 @@ struct NSGA2 {
             if (nextFront.empty()) {
                 break;
             }
-            fronts.emplace_back();
-            for (size_t i : nextFront) {
-                fronts.back().emplace_back(i);
+            fronts.emplace_back(std::move(nextFront));
+            std::vector<IndividualType> frontIndividuals;
+            for (size_t idx : fronts.back()) {
+                frontIndividuals.emplace_back(population[idx]);
             }
+            resultFronts.emplace_back(std::move(frontIndividuals));
         }
 
+        return resultFronts;
+    }
+
+    void evolve() {
+        assignCrowdingDistances(population);
+        auto offspring = getNewPopulation();
+        population.insert(population.end(), offspring.begin(), offspring.end());
+
+        auto fronts = getFronts();
         std::vector<IndividualType> nxtPopulation;
 
-        for (const auto& front : fronts) {
-            std::vector<IndividualType> now;
-            for (size_t i : front) {
-                now.emplace_back(population[i]);
-            }
-            if (nxtPopulation.size() + now.size() <= populationSize) {
-                nxtPopulation.insert(nxtPopulation.end(), now.begin(), now.end());
+        for (auto& front : fronts) {
+            if (nxtPopulation.size() + front.size() <= populationSize) {
+                nxtPopulation.insert(nxtPopulation.end(), front.begin(), front.end());
             } else {
-                assignCrowdingDistances(now);
-                std::sort(now.begin(), now.end(), [](const auto& a, const auto& b) {
+                assignCrowdingDistances(front);
+                std::sort(front.begin(), front.end(), [](const auto& a, const auto& b) {
                     return a.crowdingDistance > b.crowdingDistance;
                 });
-                for (size_t i = 0; i < populationSize - nxtPopulation.size(); ++i) {
-                    nxtPopulation.emplace_back(now[i]);
+                for (size_t i = 0; nxtPopulation.size() < populationSize; ++i) {
+                    assert(i < front.size());
+                    nxtPopulation.emplace_back(front[i]);
                 }
                 break;
             }
         }
         swap(population, nxtPopulation);
-        return fronts[0];
     }
 };
 
